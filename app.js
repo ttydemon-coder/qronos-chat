@@ -12,6 +12,7 @@
 
   let models = [];
   let currentModel = localStorage.getItem("qr:model") || "";
+  let webOn = localStorage.getItem("qr:web") === "1";
   let chat = load();
   let controller = null; // AbortController for in-flight stream
 
@@ -77,6 +78,9 @@
   function addAssistant(md, streaming, meta) {
     const d = document.createElement("div");
     d.className = "msg assistant";
+    const chip = document.createElement("span");
+    chip.className = "status-chip hidden";
+    d.appendChild(chip);
     const wrap = document.createElement("div");
     wrap.className = "bubble";
     wrap.innerHTML = streaming ? mdLite(md) + '<span class="cursor"></span>' : mdLite(md);
@@ -211,6 +215,19 @@
     inputEl.focus();
   };
 
+  const webBtn = $("webBtn");
+  function paintWeb() {
+    webBtn.classList.toggle("on", webOn);
+    webBtn.setAttribute("aria-pressed", String(webOn));
+  }
+  webBtn.onclick = () => {
+    webOn = !webOn;
+    localStorage.setItem("qr:web", webOn ? "1" : "0");
+    paintWeb();
+    webBtn.title = webOn ? "Web access: on" : "Web access: off";
+  };
+  paintWeb();
+
   inputEl.addEventListener("input", () => {
     inputEl.style.height = "auto";
     inputEl.style.height = Math.min(inputEl.scrollHeight, 140) + "px";
@@ -265,6 +282,7 @@
           model: currentModel,
           messages: chat.filter((m) => m.role !== "assistant" || m.content).map((m) => ({ role: m.role, content: m.content })),
           stream: true,
+          web_access: webOn,
         }),
       });
 
@@ -279,7 +297,8 @@
       const reader = res.body.getReader();
       const dec = new TextDecoder();
       let buf = "";
-      let usage = null;
+      let statusEl = wrap.previousElementSibling; // status chip above the bubble
+      let hadError = false;
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
@@ -292,19 +311,40 @@
           if (data === "[DONE]") continue;
           try {
             const j = JSON.parse(data);
-            if (j.usage) usage = j.usage;
-            const delta = j.choices?.[0]?.delta?.content || "";
-            if (delta) acc += delta;
+            // new protocol events
+            if (j.error) {
+              hadError = true;
+              showError("Error", j.error);
+              break;
+            }
+            if (j.status && statusEl) {
+              statusEl.textContent = j.status;
+              statusEl.classList.remove("hidden");
+              autoScroll();
+            }
+            if (j.delta) {
+              acc += j.delta;
+              if (statusEl) statusEl.classList.add("hidden");
+            }
+            if (j.done !== undefined) break;
+            // legacy fallback (raw SSE passthrough)
+            const legacy = j.choices?.[0]?.delta?.content || "";
+            if (legacy) acc += legacy;
           } catch {}
         }
         wrap.innerHTML = mdLite(acc) + '<span class="cursor"></span>';
         autoScroll();
       }
 
-      if (!acc) acc = "(empty response)";
-      chat.push({ role: "assistant", content: acc, meta: metaLabel() });
-      save();
-      render();
+      if (hadError && !acc) {
+        // error surfaced — keep the user message but no empty reply
+        render();
+      } else {
+        if (!acc) acc = "(empty response)";
+        chat.push({ role: "assistant", content: acc, meta: metaLabel() });
+        save();
+        render();
+      }
     } catch (e) {
       if (e.name === "AbortError") {
         if (acc) { chat.push({ role: "assistant", content: acc, meta: metaLabel() }); save(); }
