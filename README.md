@@ -4,6 +4,8 @@ A fast, mobile-first chat site for your **Qronos AI** gateway (https://qronos.me
 No build step, no framework — plain HTML/JS plus two tiny Vercel serverless
 functions, so it loads almost instantly on phones.
 
+**Live:** https://qronos-umber.vercel.app
+
 ## Features
 
 - All 16 gateway models in a searchable picker, grouped free → ultra, with
