@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="description" content="Qronos Chat — fast mobile chat for every model on the Qronos AI gateway." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0f'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%2359f' stroke-width='5'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%2359f'/%3E%3C/svg%3E" />
+  <title>Qronos Chat</title>
+  <link rel="preload" as="style" href="./style.css" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <button id="newChatBtn" class="icon-btn" title="New chat" aria-label="New chat">＋</button>
+    <div class="brand">Qronos<span>Chat</span></div>
+    <button id="modelBtn" class="model-chip" aria-haspopup="listbox">
+      <span id="modelName">Loading…</span><span class="caret">▾</span>
+    </button>
+  </header>
+
+  <main id="chat" class="chat" aria-live="polite">
+    <div id="welcome" class="welcome">
+      <div class="welcome-logo">Q</div>
+      <h1>What can I help with?</h1>
+      <p class="sub">Chat across every model on your Qronos gateway.</p>
+      <div id="freeModels" class="quickfree"></div>
+    </div>
+    <div id="messages"></div>
+  </main>
+
+  <footer class="composer-wrap">
+    <div id="errBanner" class="err hidden"></div>
+    <form id="composer" class="composer">
+      <textarea id="input" rows="1" placeholder="Message…" autocomplete="off"></textarea>
+      <button id="sendBtn" class="send" type="submit" aria-label="Send" disabled>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.5-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1L3.2 10c.1.4.5.8 1 .9l7.2.9c.3 0 .3.5 0 .5l-7.2.9c-.5 0-.9.4-1 1l-1 5.3c-.1.7.6 1.3 1.2 1z"/></svg>
+      </button>
+      <button id="stopBtn" class="send stop hidden" type="button" aria-label="Stop">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      </button>
+    </form>
+    <p class="hint">Powered by Qronos AI</p>
+  </footer>
+
+  <!-- Model picker sheet -->
+  <div id="sheetBackdrop" class="backdrop hidden"></div>
+  <div id="modelSheet" class="sheet hidden" role="dialog" aria-label="Choose a model">
+    <div class="sheet-head">
+      <strong>Choose a model</strong>
+      <button id="closeSheet" class="icon-btn">✕</button>
+    </div>
+    <input id="modelSearch" type="search" placeholder="Search models…" autocomplete="off" />
+    <div id="modelList" class="model-list" role="listbox"></div>
+  </div>
+
+  <!-- Key setup sheet -->
+  <div id="keySheet" class="sheet hidden" role="dialog" aria-label="API key">
+    <div class="sheet-head"><strong>Qronos API key</strong><button id="closeKey" class="icon-btn">✕</button></div>
+    <p class="key-note">Add <code>QRONOS_API_KEY</code> in your Vercel project env vars — then no one needs a key here. Or paste your key for this device (stored only in this browser).</p>
+    <form id="keyForm">
+      <input id="keyInput" type="password" inputmode="text" autocomplete="off" placeholder="sk-…" />
+      <button type="submit" class="primary">Save key</button>
+    </form>
+  </div>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>

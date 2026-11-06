@@ -1,0 +1,8 @@
+{
+  "name": "qronos-chat",
+  "version": "1.0.0",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "keywords": ["qronos", "llm", "chat", "vercel"],
+  "license": "MIT"
+}
