@@ -21,11 +21,16 @@ module.exports = async (req, res) => {
 
   try {
     const upstream = await fetch(`${BASE}/v1/models`, { headers });
-    const body = await upstream.text();
+    const j = await upstream.json();
+    // This site intentionally shows only free, working models.
+    const data = (j.data || []).filter(
+      (m) => m.min_tier === "free" && m.available === true
+    );
+    data.sort((a, b) => (a.display_name || a.id).localeCompare(b.display_name || b.id));
     res.statusCode = upstream.status;
-    res.setHeader("Content-Type", upstream.headers.get("content-type") || "application/json");
+    res.setHeader("Content-Type", "application/json");
     res.setHeader("Cache-Control", "max-age=300"); // models rarely change
-    res.end(body);
+    res.end(JSON.stringify({ object: "list", data }));
   } catch (e) {
     json(res, 502, { error: { message: "Upstream request failed", detail: String(e) } });
   }

@@ -306,6 +306,21 @@ body {
 .badge.ultra { background: color-mix(in srgb, var(--accent-2) 25%, transparent); color: #cbb2ff; }
 .badge.off { background: #ffffff14; color: var(--muted); }
 
+.usage-sheet { max-height: 92dvh; }
+.usage-content { overflow-y: auto; min-height: 0; padding-bottom: 8px; }
+.usage-section { margin-bottom: 18px; }
+.usage-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 6px 0 10px; }
+.quota-bars { display: flex; flex-direction: column; gap: 14px; }
+.bar-row .bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+.bar-row .bar-label b { font-weight: 600; }
+.bar-track { height: 8px; border-radius: 999px; background: var(--panel-2); overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); min-width: 2px; }
+.bar-fill.high { background: linear-gradient(90deg, var(--warn), var(--danger)); }
+.bar-row small { color: var(--muted); font-size: 11px; display: block; margin-top: 4px; }
+.usage-summary { color: var(--muted); font-size: 12px; margin-top: 10px; }
+.usage-models { display: flex; flex-direction: column; gap: 12px; }
+.usage-models .bar-row .bar-label span:first-child { max-width: 70vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .key-note { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
 .key-note code { background: #00000055; padding: 1px 5px; border-radius: 5px; }
 #keyForm { display: flex; gap: 8px; }

@@ -150,10 +150,12 @@
     backdrop.classList.add("hidden");
     sheet.classList.add("hidden");
     $("keySheet").classList.add("hidden");
+    $("usageSheet").classList.add("hidden");
   }
   backdrop.onclick = closeSheets;
   $("closeSheet").onclick = closeSheets;
   $("closeKey").onclick = closeSheets;
+  $("closeUsage").onclick = closeSheets;
 
   $("modelBtn").onclick = () => {
     $("modelSearch").value = "";
@@ -162,8 +164,8 @@
   };
   $("modelSearch").oninput = (e) => renderModels(e.target.value.toLowerCase());
 
-  function renderModels(q) {
-    const list = $("modelList");
+  function renderModels(q, targetId) {
+    const list = $(targetId || "modelList");
     list.innerHTML = "";
     models
       .filter(
@@ -192,6 +194,63 @@
     $("modelName").textContent = (modelById(id)?.display_name || id);
     save();
     if (close) closeSheets();
+  }
+
+  /* ---------- usage page ---------- */
+  $("usageBtn").onclick = () => {
+    renderModels("", "usageModelList");
+    openSheet($("usageSheet"));
+    initUsage();
+  };
+
+  function fmt(n) {
+    n = Number(n) || 0;
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + "k";
+    return String(n);
+  }
+
+  function bar(label, used, limit, sub, high) {
+    const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+    return `<div class="bar-row">
+      <div class="bar-label"><span>${label}</span><b>${fmt(used)} / ${fmt(limit)}</b></div>
+      <div class="bar-track"><div class="bar-fill ${high ? "high" : ""}" style="width:${pct}%"></div></div>
+      <small>${sub} · ${pct}% used</small>
+    </div>`;
+  }
+
+  async function initUsage() {
+    const zone = $("quotaBars");
+    zone.innerHTML = '<div class="bar-row"><div class="bar-label"><span>Loading…</span></div></div>';
+    $("usageModels").innerHTML = "";
+    try {
+      const key = localStorage.getItem("qr:key");
+      const res = await fetch("/api/usage", key ? { headers: { "x-qronos-key": key } } : {});
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const d = await res.json();
+      const daily = d.daily || [];
+      const dailyReq = daily.reduce((s, x) => s + (x.requests || 0), 0);
+      const dailyTok = daily.reduce((s, x) => s + (x.tokens || 0), 0);
+      const q = d.quota || {};
+      const reqLimit = dailyReq + (q.remaining_requests_today || 0);
+      const tokLimit = dailyTok + (q.remaining_tokens_today || 0);
+      zone.innerHTML =
+        bar("Requests today", dailyReq, reqLimit, `remaining ${fmt(q.remaining_requests_today || 0)}`, dailyReq / Math.max(1, reqLimit) > 0.8) +
+        bar("Tokens today", dailyTok, tokLimit, `remaining ${fmt(q.remaining_tokens_today || 0)}`, dailyTok / Math.max(1, tokLimit) > 0.8);
+      $("usageSummary").textContent = `All time: ${fmt(d.total_requests)} requests · ${fmt(d.total_tokens)} tokens`;
+
+      const by = (d.by_model || []).slice().sort((a, b) => b.requests - a.requests);
+      const max = Math.max(1, ...by.map((m) => m.requests || 0));
+      $("usageModels").innerHTML = by.length
+        ? by.map((m) => {
+            const name = modelById(m.modelId)?.display_name || m.modelId;
+            return bar(name, m.requests || 0, max, `${fmt(m.tokens)} tokens`, false);
+          }).join("")
+        : `<div class="sub">No usage yet.</div>`;
+    } catch (e) {
+      zone.innerHTML = "";
+      $("usageSummary").textContent = `Could not load usage: ${e.message}`;
+    }
   }
 
   /* Key sheet */
